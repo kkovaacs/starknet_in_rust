@@ -252,7 +252,7 @@ mod tests {
 
         assert_eq!(
             state.get_class_hash_at(&Address(1.into())).unwrap(),
-            &class_hash
+            class_hash
         );
 
         let storage_key = calculate_sn_keccak("owner".as_bytes());
@@ -261,7 +261,7 @@ mod tests {
             state
                 .get_storage_at(&(Address(1.into()), storage_key))
                 .unwrap(),
-            &Felt252::from(10)
+            Felt252::from(10)
         );
     }
 }

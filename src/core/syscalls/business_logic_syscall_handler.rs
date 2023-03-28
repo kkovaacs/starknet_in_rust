@@ -526,8 +526,7 @@ where
     fn _storage_read(&mut self, address: Address) -> Result<Felt252, SyscallHandlerError> {
         Ok(self
             .starknet_storage_state
-            .read(&felt_to_hash(&address.0))
-            .cloned()?)
+            .read(&felt_to_hash(&address.0))?)
     }
 
     fn _storage_write(
