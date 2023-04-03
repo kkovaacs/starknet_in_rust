@@ -98,7 +98,7 @@ impl InternalDeployAccount {
         general_config: &StarknetGeneralConfig,
     ) -> Result<TransactionExecutionInfo, TransactionError>
     where
-        S: Clone + State + StateReader,
+        S: State + StateReader,
     {
         let tx_info = self.apply(state, general_config)?;
 
@@ -194,10 +194,7 @@ impl InternalDeployAccount {
         }
     }
 
-    fn handle_nonce<S: State + StateReader + Clone>(
-        &self,
-        state: &mut S,
-    ) -> Result<(), TransactionError> {
+    fn handle_nonce<S: State + StateReader>(&self, state: &mut S) -> Result<(), TransactionError> {
         if self.version == 0 {
             return Ok(());
         }
@@ -317,7 +314,7 @@ impl InternalDeployAccount {
         general_config: &StarknetGeneralConfig,
     ) -> Result<FeeInfo, TransactionError>
     where
-        S: Clone + State + StateReader,
+        S: State + StateReader,
     {
         if self.max_fee.is_zero() {
             return Ok((None, 0));
