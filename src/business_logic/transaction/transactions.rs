@@ -32,14 +32,15 @@ impl Transaction {
         }
     }
 
-    pub fn execute<S: Default + State + StateReader + Clone>(
+    pub fn execute<S: State + StateReader>(
         &self,
-        state: &mut S,
-        general_config: &StarknetGeneralConfig,
+        _state: &mut S,
+        _general_config: &StarknetGeneralConfig,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
-        match self {
-            Transaction::Deploy(tx) => tx.execute(state, general_config),
-            Transaction::InvokeFunction(tx) => tx.execute(state, general_config),
-        }
+        // match self {
+        //     Transaction::Deploy(tx) => tx.execute(state, general_config),
+        //     Transaction::InvokeFunction(tx) => tx.execute(state, general_config),
+        // }
+        Err(TransactionError::AttempToUseNoneCodeAddress)
     }
 }

@@ -1,8 +1,12 @@
 use super::objects::{CallInfo, CallType, TransactionExecutionContext};
 use crate::{
     business_logic::{
-        fact_state::state::ExecutionResourcesManager, state::state_api::State,
-        state::state_api::StateReader, transaction::error::TransactionError,
+        fact_state::{
+            in_memory_state_reader::InMemoryStateReader, state::ExecutionResourcesManager,
+        },
+        state::state_api::State,
+        state::{cached_state::CachedState, state_api::StateReader},
+        transaction::error::TransactionError,
     },
     core::syscalls::{
         business_logic_syscall_handler::BusinessLogicSyscallHandler,
@@ -69,7 +73,7 @@ impl ExecutionEntryPoint {
         tx_execution_context: &TransactionExecutionContext,
     ) -> Result<CallInfo, TransactionError>
     where
-        T: Default + State + StateReader,
+        T: State + StateReader,
     {
         let previous_cairo_usage = resources_manager.cairo_usage.clone();
 
@@ -106,7 +110,7 @@ impl ExecutionEntryPoint {
         tx_execution_context: &TransactionExecutionContext,
     ) -> Result<StarknetRunner<BusinessLogicSyscallHandler<'a, T>>, TransactionError>
     where
-        T: Default + State + StateReader,
+        T: State + StateReader,
     {
         // Prepare input for Starknet runner.
         let class_hash = self.get_code_class_hash(state)?;
@@ -122,7 +126,7 @@ impl ExecutionEntryPoint {
         let mut cairo_runner = CairoRunner::new(&contract_class.program, "all", false)?;
         cairo_runner.initialize_function_runner(&mut vm)?;
 
-        let mut tmp_state = T::default();
+        let mut tmp_state = CachedState::new(InMemoryStateReader::default(), None);
         let hint_processor =
             SyscallHintProcessor::new(BusinessLogicSyscallHandler::default_with(&mut tmp_state));
         let mut runner = StarknetRunner::new(cairo_runner, vm, hint_processor);
