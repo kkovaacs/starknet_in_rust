@@ -86,7 +86,7 @@ impl PyInternalDeclare {
         general_config: &PyStarknetGeneralConfig,
     ) -> PyResult<PyTransactionExecutionInfo> {
         let state: &mut CachedState<InMemoryStateReader> = state.into();
-        match self.inner.execute(state, general_config.into()) {
+        match self.inner.execute(state, general_config.into(), false) {
             Ok(res) => Ok(res.into()),
             Err(err) => Err(PyValueError::new_err(err.to_string())),
         }

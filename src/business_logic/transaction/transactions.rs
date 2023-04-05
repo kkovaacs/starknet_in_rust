@@ -36,10 +36,11 @@ impl Transaction {
         &self,
         state: &mut S,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
         match self {
             Transaction::Deploy(tx) => tx.execute(state, general_config),
-            Transaction::InvokeFunction(tx) => tx.execute(state, general_config),
+            Transaction::InvokeFunction(tx) => tx.execute(state, general_config, skip_fee_transfer),
         }
     }
 }
