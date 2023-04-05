@@ -131,7 +131,7 @@ impl PyStarknetState {
     pub fn execute_tx(&mut self, tx: &mut PyTransaction) -> PyResult<PyTransactionExecutionInfo> {
         let tx_info = self
             .inner
-            .execute_tx(&mut tx.inner)
+            .execute_tx(&mut tx.inner, false)
             .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
         Ok(PyTransactionExecutionInfo::from(tx_info))
     }

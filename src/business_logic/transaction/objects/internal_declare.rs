@@ -207,6 +207,7 @@ impl InternalDeclare {
         state: &mut S,
         resources: &HashMap<String, usize>,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<FeeInfo, TransactionError> {
         if self.max_fee.is_zero() {
             return Ok((None, 0));
@@ -218,11 +219,16 @@ impl InternalDeclare {
             general_config,
         )?;
 
-        let tx_context = self.get_execution_context(general_config.invoke_tx_max_n_steps);
-        let fee_transfer_info =
-            execute_fee_transfer(state, general_config, &tx_context, actual_fee)?;
+        match skip_fee_transfer {
+            true => Ok((None, actual_fee)),
+            false => {
+                let tx_context = self.get_execution_context(general_config.invoke_tx_max_n_steps);
+                let fee_transfer_info =
+                    execute_fee_transfer(state, general_config, &tx_context, actual_fee)?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+                Ok((Some(fee_transfer_info), actual_fee))
+            }
+        }
     }
 
     fn handle_nonce<S: Default + State + StateReader + Clone>(
@@ -253,6 +259,7 @@ impl InternalDeclare {
         &self,
         state: &mut S,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
         let concurrent_exec_info = self.apply(state, general_config)?;
         self.handle_nonce(state)?;
@@ -273,6 +280,7 @@ impl InternalDeclare {
             state,
             &concurrent_exec_info.actual_resources,
             general_config,
+            skip_fee_transfer,
         )?;
 
         Ok(
@@ -670,11 +678,11 @@ mod tests {
         .unwrap();
 
         internal_declare
-            .execute(&mut state, &StarknetGeneralConfig::default())
+            .execute(&mut state, &StarknetGeneralConfig::default(), false)
             .unwrap();
 
         let expected_error =
-            internal_declare_error.execute(&mut state, &StarknetGeneralConfig::default());
+            internal_declare_error.execute(&mut state, &StarknetGeneralConfig::default(), false);
 
         // ---------------------
         //      Comparison
@@ -739,11 +747,11 @@ mod tests {
         .unwrap();
 
         internal_declare
-            .execute(&mut state, &StarknetGeneralConfig::default())
+            .execute(&mut state, &StarknetGeneralConfig::default(), false)
             .unwrap();
 
         let expected_error =
-            internal_declare.execute(&mut state, &StarknetGeneralConfig::default());
+            internal_declare.execute(&mut state, &StarknetGeneralConfig::default(), false);
 
         // ---------------------
         //      Comparison
@@ -783,7 +791,7 @@ mod tests {
         .unwrap();
 
         let internal_declare_error =
-            internal_declare.execute(&mut state, &StarknetGeneralConfig::default());
+            internal_declare.execute(&mut state, &StarknetGeneralConfig::default(), false);
 
         assert!(internal_declare_error.is_err());
         assert_matches!(
@@ -846,7 +854,7 @@ mod tests {
 
         // We expect a fee transfer failure because the fee token contract is not set up
         assert_matches!(
-            internal_declare.execute(&mut state, &StarknetGeneralConfig::default()),
+            internal_declare.execute(&mut state, &StarknetGeneralConfig::default(), false),
             Err(TransactionError::FeeError(e)) if e == "Fee transfer failure"
         );
     }

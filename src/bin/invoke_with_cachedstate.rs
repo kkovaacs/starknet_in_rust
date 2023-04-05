@@ -62,7 +62,7 @@ fn main() {
             Some(Felt252::from(i * 2)),
         )
         .unwrap()
-        .execute(&mut cached_state, &general_config)
+        .execute(&mut cached_state, &general_config, false)
         .unwrap();
 
         let tx_exec_info = InternalInvokeFunction::new(
@@ -75,7 +75,7 @@ fn main() {
             Some(Felt252::from((i * 2) + 1)),
         )
         .unwrap()
-        .execute(&mut cached_state, &general_config)
+        .execute(&mut cached_state, &general_config, false)
         .unwrap();
 
         assert_eq!(
