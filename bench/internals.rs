@@ -127,7 +127,7 @@ fn declare() {
             )
             .expect("couldn't create transaction");
 
-            declare_tx.execute(&mut cloned_state, config)
+            declare_tx.execute(&mut cloned_state, config, false)
         })
         .unwrap();
     }
@@ -216,7 +216,7 @@ fn invoke() {
                 None,
             )
             .unwrap();
-            internal_invoke.execute(&mut state_copy, config)
+            internal_invoke.execute(&mut state_copy, config, false)
         })
         .unwrap();
     }

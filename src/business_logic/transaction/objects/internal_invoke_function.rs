@@ -228,6 +228,7 @@ impl InternalInvokeFunction {
         state: &mut S,
         resources: &HashMap<String, usize>,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<FeeInfo, TransactionError>
     where
         S: State + StateReader,
@@ -242,11 +243,17 @@ impl InternalInvokeFunction {
             general_config,
         )?;
 
-        let tx_context = self.get_execution_context(general_config.invoke_tx_max_n_steps)?;
-        let fee_transfer_info =
-            execute_fee_transfer(state, general_config, &tx_context, actual_fee)?;
+        match skip_fee_transfer {
+            true => Ok((None, actual_fee)),
+            false => {
+                let tx_context =
+                    self.get_execution_context(general_config.invoke_tx_max_n_steps)?;
+                let fee_transfer_info =
+                    execute_fee_transfer(state, general_config, &tx_context, actual_fee)?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+                Ok((Some(fee_transfer_info), actual_fee))
+            }
+        }
     }
 
     /// Calculates actual fee used by the transaction using the execution info returned by apply(),
@@ -255,6 +262,7 @@ impl InternalInvokeFunction {
         &self,
         state: &mut S,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
         let concurrent_exec_info = self.apply(state, general_config)?;
         self.handle_nonce(state)?;
@@ -263,6 +271,7 @@ impl InternalInvokeFunction {
             state,
             &concurrent_exec_info.actual_resources,
             general_config,
+            skip_fee_transfer,
         )?;
 
         Ok(
@@ -472,7 +481,7 @@ mod tests {
             .unwrap();
 
         let result = internal_invoke_function
-            .execute(&mut state, &StarknetGeneralConfig::default())
+            .execute(&mut state, &StarknetGeneralConfig::default(), false)
             .unwrap();
 
         assert_eq!(result.tx_type, Some(TransactionType::InvokeFunction));
@@ -649,7 +658,7 @@ mod tests {
             (String::from("range_check_builtin"), 70.into()),
         ]);
 
-        let expected_error = internal_invoke_function.execute(&mut state, &config);
+        let expected_error = internal_invoke_function.execute(&mut state, &config, false);
         let error_msg = "Fee transfer failure".to_string();
         assert!(expected_error.is_err());
         assert_matches!(expected_error.unwrap_err(), TransactionError::FeeError(msg) if msg == error_msg);
@@ -709,7 +718,7 @@ mod tests {
         ]);
         config.starknet_os_config.gas_price = 1;
 
-        let expected_error = internal_invoke_function.execute(&mut state, &config);
+        let expected_error = internal_invoke_function.execute(&mut state, &config, false);
         let error_msg = "Actual fee exceeded max fee.".to_string();
         assert!(expected_error.is_err());
         assert_matches!(expected_error.unwrap_err(), TransactionError::FeeError(actual_error_msg) if actual_error_msg == error_msg);
@@ -762,11 +771,11 @@ mod tests {
             .unwrap();
 
         internal_invoke_function
-            .execute(&mut state, &StarknetGeneralConfig::default())
+            .execute(&mut state, &StarknetGeneralConfig::default(), false)
             .unwrap();
 
         let expected_error =
-            internal_invoke_function.execute(&mut state, &StarknetGeneralConfig::default());
+            internal_invoke_function.execute(&mut state, &StarknetGeneralConfig::default(), false);
 
         assert!(expected_error.is_err());
         assert_matches!(
@@ -822,7 +831,7 @@ mod tests {
             .unwrap();
 
         let expected_error =
-            internal_invoke_function.execute(&mut state, &StarknetGeneralConfig::default());
+            internal_invoke_function.execute(&mut state, &StarknetGeneralConfig::default(), false);
 
         assert!(expected_error.is_err());
         assert_matches!(

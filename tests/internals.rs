@@ -666,7 +666,9 @@ fn test_declare_tx() {
     // Check ContractClass is not set before the declare_tx
     assert!(state.get_contract_class(&declare_tx.class_hash).is_err());
     // Execute declare_tx
-    let result = declare_tx.execute(&mut state, &general_config).unwrap();
+    let result = declare_tx
+        .execute(&mut state, &general_config, false)
+        .unwrap();
     // Check ContractClass is set after the declare_tx
     assert!(state.get_contract_class(&declare_tx.class_hash).is_ok());
 
@@ -794,7 +796,9 @@ fn test_invoke_tx() {
 
     // Extract invoke transaction fields for testing, as it is consumed when creating an account
     // transaction.
-    let result = invoke_tx.execute(state, starknet_general_config).unwrap();
+    let result = invoke_tx
+        .execute(state, starknet_general_config, false)
+        .unwrap();
     let expected_execution_info = expected_transaction_execution_info();
 
     assert_eq!(result, expected_execution_info);
@@ -815,7 +819,9 @@ fn test_invoke_tx_state() {
     ];
     let invoke_tx = invoke_tx(calldata);
 
-    invoke_tx.execute(state, starknet_general_config).unwrap();
+    invoke_tx
+        .execute(state, starknet_general_config, false)
+        .unwrap();
 
     let expected_final_state = expected_state_after_tx();
 
@@ -1107,7 +1113,9 @@ fn test_state_for_declare_tx() {
     assert!(state.get_contract_class(&declare_tx.class_hash).is_err());
     assert_eq!(state.get_nonce_at(&declare_tx.sender_address), Ok(0.into()));
     // Execute declare_tx
-    assert!(declare_tx.execute(&mut state, &general_config).is_ok());
+    assert!(declare_tx
+        .execute(&mut state, &general_config, false)
+        .is_ok());
     assert_eq!(state.get_nonce_at(&declare_tx.sender_address), Ok(1.into()));
 
     // Check state.state_reader
@@ -1292,7 +1300,7 @@ fn test_invoke_tx_wrong_call_data() {
     let invoke_tx = invoke_tx(calldata);
 
     // Execute transaction
-    let result = invoke_tx.execute(state, starknet_general_config);
+    let result = invoke_tx.execute(state, starknet_general_config, false);
 
     // Assert error
     assert_matches!(
@@ -1331,7 +1339,7 @@ fn test_invoke_tx_wrong_entrypoint() {
     .unwrap();
 
     // Execute transaction
-    let result = invoke_tx.execute(state, starknet_general_config);
+    let result = invoke_tx.execute(state, starknet_general_config, false);
 
     // Assert error
     assert_matches!(result, Err(TransactionError::EntryPointNotFound));

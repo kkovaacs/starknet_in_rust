@@ -63,7 +63,7 @@ fn main() {
             None,
         )
         .unwrap()
-        .execute(&mut cached_state, &general_config)
+        .execute(&mut cached_state, &general_config, false)
         .unwrap();
 
         let tx_exec_info = InternalInvokeFunction::new(
@@ -77,7 +77,7 @@ fn main() {
             None,
         )
         .unwrap()
-        .execute(&mut cached_state, &general_config)
+        .execute(&mut cached_state, &general_config, false)
         .unwrap();
 
         assert_eq!(
