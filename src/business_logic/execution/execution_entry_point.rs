@@ -225,7 +225,7 @@ impl ExecutionEntryPoint {
     fn build_call_info<S>(
         &self,
         previous_cairo_usage: ExecutionResources,
-        syscall_handler: BusinessLogicSyscallHandler<S>,
+        syscall_handler: BusinessLogicSyscallHandler<'_, S>,
         retdata: Vec<Felt252>,
     ) -> Result<CallInfo, TransactionError>
     where

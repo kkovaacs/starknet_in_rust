@@ -29,7 +29,7 @@ use types::general_config::{PyStarknetChainId, PyStarknetGeneralConfig, PyStarkn
 compile_error!("\"extension-module\" is incompatible with \"embedded-python\" as it inhibits linking with cpython");
 
 #[pymodule]
-pub fn starknet_rs_py(_py: Python, m: &PyModule) -> PyResult<()> {
+pub fn starknet_rs_py(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     eprintln!("WARN: using starknet_rs_py");
 
     m.add_class::<PyBlockInfo>()?;

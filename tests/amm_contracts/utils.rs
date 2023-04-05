@@ -118,7 +118,7 @@ pub fn setup_contract(
 pub fn execute_entry_point(
     function_name: &str,
     calldata: &[Felt252],
-    call_config: &mut CallConfig,
+    call_config: &mut CallConfig<'_>,
 ) -> Result<CallInfo, TransactionError> {
     // Entry point for init pool
     let (exec_entry_point, _) = get_entry_points(

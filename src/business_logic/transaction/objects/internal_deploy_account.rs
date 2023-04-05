@@ -96,6 +96,7 @@ impl InternalDeployAccount {
         &self,
         state: &mut S,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError>
     where
         S: State + StateReader,
@@ -103,8 +104,12 @@ impl InternalDeployAccount {
         let tx_info = self.apply(state, general_config)?;
 
         self.handle_nonce(state)?;
-        let (fee_transfer_info, actual_fee) =
-            self.charge_fee(state, &tx_info.actual_resources, general_config)?;
+        let (fee_transfer_info, actual_fee) = self.charge_fee(
+            state,
+            &tx_info.actual_resources,
+            general_config,
+            skip_fee_transfer,
+        )?;
 
         Ok(
             TransactionExecutionInfo::from_concurrent_state_execution_info(
@@ -199,7 +204,7 @@ impl InternalDeployAccount {
             return Ok(());
         }
 
-        let current_nonce = state.get_nonce_at(&self.contract_address)?.to_owned();
+        let current_nonce = state.get_nonce_at(&self.contract_address)?;
         if current_nonce != self.nonce {
             return Err(TransactionError::InvalidTransactionNonce(
                 current_nonce.to_string(),
@@ -312,6 +317,7 @@ impl InternalDeployAccount {
         state: &mut S,
         resources: &HashMap<String, usize>,
         general_config: &StarknetGeneralConfig,
+        skip_fee_transfer: bool,
     ) -> Result<FeeInfo, TransactionError>
     where
         S: State + StateReader,
@@ -326,10 +332,15 @@ impl InternalDeployAccount {
             general_config,
         )?;
 
-        let tx_context = self.get_execution_context(general_config.invoke_tx_max_n_steps);
-        let fee_transfer_info =
-            execute_fee_transfer(state, general_config, &tx_context, actual_fee)?;
+        match skip_fee_transfer {
+            true => Ok((None, actual_fee)),
+            false => {
+                let tx_context = self.get_execution_context(general_config.invoke_tx_max_n_steps);
+                let fee_transfer_info =
+                    execute_fee_transfer(state, general_config, &tx_context, actual_fee)?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+                Ok((Some(fee_transfer_info), actual_fee))
+            }
+        }
     }
 }

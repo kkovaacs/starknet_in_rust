@@ -18,34 +18,37 @@ use crate::amm_contracts::utils::*;
 
 fn init_pool(
     calldata: &[Felt252],
-    call_config: &mut CallConfig,
+    call_config: &mut CallConfig<'_>,
 ) -> Result<CallInfo, TransactionError> {
     execute_entry_point("init_pool", calldata, call_config)
 }
 
 fn get_pool_token_balance(
     calldata: &[Felt252],
-    call_config: &mut CallConfig,
+    call_config: &mut CallConfig<'_>,
 ) -> Result<CallInfo, TransactionError> {
     execute_entry_point("get_pool_token_balance", calldata, call_config)
 }
 
 fn get_account_token_balance(
     calldata: &[Felt252],
-    call_config: &mut CallConfig,
+    call_config: &mut CallConfig<'_>,
 ) -> Result<CallInfo, TransactionError> {
     execute_entry_point("get_account_token_balance", calldata, call_config)
 }
 
 fn add_demo_token(
     calldata: &[Felt252],
-    call_config: &mut CallConfig,
+    call_config: &mut CallConfig<'_>,
 ) -> Result<CallInfo, TransactionError> {
     execute_entry_point("add_demo_token", calldata, call_config)
 }
 
 // Swap function to execute swap between two tokens
-fn swap(calldata: &[Felt252], call_config: &mut CallConfig) -> Result<CallInfo, TransactionError> {
+fn swap(
+    calldata: &[Felt252],
+    call_config: &mut CallConfig<'_>,
+) -> Result<CallInfo, TransactionError> {
     execute_entry_point("swap", calldata, call_config)
 }
 #[test]
