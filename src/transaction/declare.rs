@@ -209,6 +209,7 @@ impl Declare {
         state: &mut S,
         resources: &HashMap<String, usize>,
         block_context: &BlockContext,
+        skip_fee_transfer: bool,
     ) -> Result<FeeInfo, TransactionError> {
         if self.max_fee.is_zero() {
             return Ok((None, 0));
@@ -220,12 +221,21 @@ impl Declare {
             block_context,
         )?;
 
-        let mut tx_execution_context =
-            self.get_execution_context(block_context.invoke_tx_max_n_steps);
-        let fee_transfer_info =
-            execute_fee_transfer(state, block_context, &mut tx_execution_context, actual_fee)?;
+        match skip_fee_transfer {
+            true => Ok((None, actual_fee)),
+            false => {
+                let mut tx_execution_context =
+                    self.get_execution_context(block_context.invoke_tx_max_n_steps);
+                let fee_transfer_info = execute_fee_transfer(
+                    state,
+                    block_context,
+                    &mut tx_execution_context,
+                    actual_fee,
+                )?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+                Ok((Some(fee_transfer_info), actual_fee))
+            }
+        }
     }
 
     fn handle_nonce<S: State + StateReader>(&self, state: &mut S) -> Result<(), TransactionError> {
@@ -253,6 +263,7 @@ impl Declare {
         &self,
         state: &mut S,
         block_context: &BlockContext,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
         let concurrent_exec_info = self.apply(state, block_context)?;
         self.handle_nonce(state)?;
@@ -269,8 +280,12 @@ impl Declare {
             }
         }
 
-        let (fee_transfer_info, actual_fee) =
-            self.charge_fee(state, &concurrent_exec_info.actual_resources, block_context)?;
+        let (fee_transfer_info, actual_fee) = self.charge_fee(
+            state,
+            &concurrent_exec_info.actual_resources,
+            block_context,
+            skip_fee_transfer,
+        )?;
 
         Ok(
             TransactionExecutionInfo::from_concurrent_state_execution_info(
@@ -677,10 +692,11 @@ mod tests {
         .unwrap();
 
         internal_declare
-            .execute(&mut state, &BlockContext::default())
+            .execute(&mut state, &BlockContext::default(), false)
             .unwrap();
 
-        let expected_error = internal_declare_error.execute(&mut state, &BlockContext::default());
+        let expected_error =
+            internal_declare_error.execute(&mut state, &BlockContext::default(), false);
 
         // ---------------------
         //      Comparison
@@ -746,10 +762,10 @@ mod tests {
         .unwrap();
 
         internal_declare
-            .execute(&mut state, &BlockContext::default())
+            .execute(&mut state, &BlockContext::default(), false)
             .unwrap();
 
-        let expected_error = internal_declare.execute(&mut state, &BlockContext::default());
+        let expected_error = internal_declare.execute(&mut state, &BlockContext::default(), false);
 
         // ---------------------
         //      Comparison
@@ -789,7 +805,8 @@ mod tests {
         )
         .unwrap();
 
-        let internal_declare_error = internal_declare.execute(&mut state, &BlockContext::default());
+        let internal_declare_error =
+            internal_declare.execute(&mut state, &BlockContext::default(), false);
 
         assert!(internal_declare_error.is_err());
         assert_matches!(
@@ -853,7 +870,7 @@ mod tests {
 
         // We expect a fee transfer failure because the fee token contract is not set up
         assert_matches!(
-            internal_declare.execute(&mut state, &BlockContext::default()),
+            internal_declare.execute(&mut state, &BlockContext::default(), false),
             Err(TransactionError::FeeError(e)) if e == "Fee transfer failure"
         );
     }

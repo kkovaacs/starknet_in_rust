@@ -790,7 +790,9 @@ fn test_declare_tx() {
     // Check ContractClass is not set before the declare_tx
     assert!(state.get_contract_class(&declare_tx.class_hash).is_err());
     // Execute declare_tx
-    let result = declare_tx.execute(&mut state, &block_context).unwrap();
+    let result = declare_tx
+        .execute(&mut state, &block_context, false)
+        .unwrap();
     // Check ContractClass is set after the declare_tx
     assert!(state.get_contract_class(&declare_tx.class_hash).is_ok());
 
@@ -832,7 +834,9 @@ fn test_declarev2_tx() {
         .get_contract_class(&felt_to_hash(&declare_tx.compiled_class_hash))
         .is_err());
     // Execute declare_tx
-    let result = declare_tx.execute(&mut state, &block_context).unwrap();
+    let result = declare_tx
+        .execute(&mut state, &block_context, false)
+        .unwrap();
     // Check ContractClass is set after the declare_tx
     assert!(state
         .get_contract_class(&declare_tx.compiled_class_hash.to_be_bytes())
@@ -1069,7 +1073,7 @@ fn test_invoke_tx() {
     // Extract invoke transaction fields for testing, as it is consumed when creating an account
     // transaction.
     let result = invoke_tx
-        .execute(state, starknet_general_context, 0)
+        .execute(state, starknet_general_context, 0, false)
         .unwrap();
     let expected_execution_info = expected_transaction_execution_info();
 
@@ -1092,7 +1096,7 @@ fn test_invoke_tx_state() {
     let invoke_tx = invoke_tx(calldata);
 
     invoke_tx
-        .execute(state, starknet_general_context, 0)
+        .execute(state, starknet_general_context, 0, false)
         .unwrap();
 
     let expected_final_state = expected_state_after_tx();
@@ -1108,7 +1112,9 @@ fn test_invoke_with_declarev2_tx() {
 
     // Declare the fibonacci contract
     let declare_tx = declarev2_tx();
-    declare_tx.execute(state, starknet_general_config).unwrap();
+    declare_tx
+        .execute(state, starknet_general_config, false)
+        .unwrap();
 
     // Deploy the fibonacci contract
     let deploy = deploy_fib_syscall();
@@ -1127,7 +1133,7 @@ fn test_invoke_with_declarev2_tx() {
 
     let expected_gas_consumed = 4710;
     let result = invoke_tx
-        .execute(state, starknet_general_config, expected_gas_consumed)
+        .execute(state, starknet_general_config, expected_gas_consumed, false)
         .unwrap();
 
     let expected_execution_info = expected_fib_transaction_execution_info();
@@ -1173,7 +1179,7 @@ fn test_deploy_account() {
     );
 
     let tx_info = deploy_account_tx
-        .execute(&mut state, &block_context)
+        .execute(&mut state, &block_context, false)
         .unwrap();
 
     assert_eq!(state, state_after);
@@ -1422,7 +1428,9 @@ fn test_state_for_declare_tx() {
         .unwrap()
         .is_zero());
     // Execute declare_tx
-    assert!(declare_tx.execute(&mut state, &block_context).is_ok());
+    assert!(declare_tx
+        .execute(&mut state, &block_context, false)
+        .is_ok());
     assert!(state
         .get_nonce_at(&declare_tx.sender_address)
         .unwrap()
@@ -1610,7 +1618,7 @@ fn test_invoke_tx_wrong_call_data() {
     let invoke_tx = invoke_tx(calldata);
 
     // Execute transaction
-    let result = invoke_tx.execute(state, starknet_general_context, 0);
+    let result = invoke_tx.execute(state, starknet_general_context, 0, false);
 
     // Assert error
     assert_matches!(
@@ -1650,7 +1658,7 @@ fn test_invoke_tx_wrong_entrypoint() {
     .unwrap();
 
     // Execute transaction
-    let result = invoke_tx.execute(state, starknet_general_context, 0);
+    let result = invoke_tx.execute(state, starknet_general_context, 0, false);
 
     // Assert error
     assert_matches!(result, Err(TransactionError::EntryPointNotFound));
@@ -1679,7 +1687,7 @@ fn test_deploy_undeclared_account() {
     assert!(state.get_contract_class(&not_deployed_class_hash).is_err());
 
     // Execute transaction
-    let result = deploy_account_tx.execute(&mut state, &block_context);
+    let result = deploy_account_tx.execute(&mut state, &block_context, false);
 
     // Execute transaction
     assert_matches!(

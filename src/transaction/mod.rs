@@ -42,13 +42,16 @@ impl Transaction {
         state: &mut S,
         block_context: &BlockContext,
         remaining_gas: u128,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
         match self {
-            Transaction::Declare(tx) => tx.execute(state, block_context),
-            Transaction::DeclareV2(tx) => tx.execute(state, block_context),
+            Transaction::Declare(tx) => tx.execute(state, block_context, skip_fee_transfer),
+            Transaction::DeclareV2(tx) => tx.execute(state, block_context, skip_fee_transfer),
             Transaction::Deploy(tx) => tx.execute(state, block_context),
-            Transaction::DeployAccount(tx) => tx.execute(state, block_context),
-            Transaction::InvokeFunction(tx) => tx.execute(state, block_context, 0),
+            Transaction::DeployAccount(tx) => tx.execute(state, block_context, skip_fee_transfer),
+            Transaction::InvokeFunction(tx) => {
+                tx.execute(state, block_context, 0, skip_fee_transfer)
+            }
             Transaction::L1Handler(tx) => tx.execute(state, block_context, remaining_gas),
         }
     }

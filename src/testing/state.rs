@@ -92,7 +92,7 @@ impl StarknetState {
             hash_value,
         )?;
 
-        let tx_execution_info = tx.execute(&mut self.state, &self.block_context)?;
+        let tx_execution_info = tx.execute(&mut self.state, &self.block_context, false)?;
 
         Ok((tx.class_hash, tx_execution_info))
     }
@@ -122,7 +122,7 @@ impl StarknetState {
         )?;
 
         let mut tx = Transaction::InvokeFunction(tx);
-        self.execute_tx(&mut tx, remaining_gas)
+        self.execute_tx(&mut tx, remaining_gas, false)
     }
 
     /// Builds the transaction execution context and executes the entry point.
@@ -191,7 +191,7 @@ impl StarknetState {
         self.state
             .set_contract_class(&contract_hash, &contract_class)?;
 
-        let tx_execution_info = self.execute_tx(&mut tx, remaining_gas)?;
+        let tx_execution_info = self.execute_tx(&mut tx, remaining_gas, false)?;
         Ok((contract_address, tx_execution_info))
     }
 
@@ -199,8 +199,14 @@ impl StarknetState {
         &mut self,
         tx: &mut Transaction,
         remaining_gas: u128,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, StarknetStateError> {
-        let tx = tx.execute(&mut self.state, &self.block_context, remaining_gas)?;
+        let tx = tx.execute(
+            &mut self.state,
+            &self.block_context,
+            remaining_gas,
+            skip_fee_transfer,
+        )?;
         let tx_execution_info = ExecutionInfo::Transaction(Box::new(tx.clone()));
         self.add_messages_and_events(&tx_execution_info)?;
         Ok(tx)

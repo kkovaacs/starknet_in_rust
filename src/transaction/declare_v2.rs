@@ -134,6 +134,7 @@ impl DeclareV2 {
         state: &mut S,
         resources: &HashMap<String, usize>,
         block_context: &BlockContext,
+        skip_free_transfer: bool,
     ) -> Result<FeeInfo, TransactionError> {
         if self.max_fee.is_zero() {
             return Ok((None, 0));
@@ -145,12 +146,21 @@ impl DeclareV2 {
             block_context,
         )?;
 
-        let mut tx_execution_context =
-            self.get_execution_context(block_context.invoke_tx_max_n_steps);
-        let fee_transfer_info =
-            execute_fee_transfer(state, block_context, &mut tx_execution_context, actual_fee)?;
+        match skip_free_transfer {
+            true => Ok((None, actual_fee)),
+            false => {
+                let mut tx_execution_context =
+                    self.get_execution_context(block_context.invoke_tx_max_n_steps);
+                let fee_transfer_info = execute_fee_transfer(
+                    state,
+                    block_context,
+                    &mut tx_execution_context,
+                    actual_fee,
+                )?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+                Ok((Some(fee_transfer_info), actual_fee))
+            }
+        }
     }
 
     // TODO: delete once used
@@ -178,6 +188,7 @@ impl DeclareV2 {
         &self,
         state: &mut S,
         block_context: &BlockContext,
+        skip_free_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError> {
         self.verify_version()?;
 
@@ -204,7 +215,7 @@ impl DeclareV2 {
         self.compile_and_store_casm_class(state)?;
 
         let (fee_transfer_info, actual_fee) =
-            self.charge_fee(state, &actual_resources, block_context)?;
+            self.charge_fee(state, &actual_resources, block_context, skip_free_transfer)?;
 
         let concurrent_exec_info = TransactionExecutionInfo::create_concurrent_stage_execution_info(
             Some(validate_info),

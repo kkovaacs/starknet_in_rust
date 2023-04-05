@@ -90,7 +90,7 @@ fn deploy_account() {
                 None,
             )
             .unwrap();
-            internal_deploy_account.execute(&mut state_copy, block_context)
+            internal_deploy_account.execute(&mut state_copy, block_context, false)
         })
         .unwrap();
     }
@@ -123,7 +123,7 @@ fn declare() {
             )
             .expect("couldn't create transaction");
 
-            declare_tx.execute(&mut cloned_state, block_context)
+            declare_tx.execute(&mut cloned_state, block_context, false)
         })
         .unwrap();
     }
@@ -213,7 +213,7 @@ fn invoke() {
                 None,
             )
             .unwrap();
-            internal_invoke.execute(&mut state_copy, block_context, 0)
+            internal_invoke.execute(&mut state_copy, block_context, 0, false)
         })
         .unwrap();
     }

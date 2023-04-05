@@ -99,8 +99,9 @@ pub fn execute_transaction<T: State + StateReader>(
     state: &mut T,
     block_context: BlockContext,
     remaining_gas: u128,
+    skip_fee_transfer: bool,
 ) -> Result<TransactionExecutionInfo, TransactionError> {
-    tx.execute(state, &block_context, remaining_gas)
+    tx.execute(state, &block_context, remaining_gas, skip_fee_transfer)
 }
 
 #[cfg(test)]

@@ -113,6 +113,7 @@ impl DeployAccount {
         &self,
         state: &mut S,
         block_context: &BlockContext,
+        skip_fee_transfer: bool,
     ) -> Result<TransactionExecutionInfo, TransactionError>
     where
         S: State + StateReader,
@@ -120,8 +121,12 @@ impl DeployAccount {
         let tx_info = self.apply(state, block_context)?;
 
         self.handle_nonce(state)?;
-        let (fee_transfer_info, actual_fee) =
-            self.charge_fee(state, &tx_info.actual_resources, block_context)?;
+        let (fee_transfer_info, actual_fee) = self.charge_fee(
+            state,
+            &tx_info.actual_resources,
+            block_context,
+            skip_fee_transfer,
+        )?;
 
         Ok(
             TransactionExecutionInfo::from_concurrent_state_execution_info(
@@ -319,6 +324,7 @@ impl DeployAccount {
         state: &mut S,
         resources: &HashMap<String, usize>,
         block_context: &BlockContext,
+        skip_fee_transfer: bool,
     ) -> Result<FeeInfo, TransactionError>
     where
         S: State + StateReader,
@@ -333,12 +339,21 @@ impl DeployAccount {
             block_context,
         )?;
 
-        let mut tx_execution_context =
-            self.get_execution_context(block_context.invoke_tx_max_n_steps);
-        let fee_transfer_info =
-            execute_fee_transfer(state, block_context, &mut tx_execution_context, actual_fee)?;
+        match skip_fee_transfer {
+            true => Ok((None, actual_fee)),
+            false => {
+                let mut tx_execution_context =
+                    self.get_execution_context(block_context.invoke_tx_max_n_steps);
+                let fee_transfer_info = execute_fee_transfer(
+                    state,
+                    block_context,
+                    &mut tx_execution_context,
+                    actual_fee,
+                )?;
 
-        Ok((Some(fee_transfer_info), actual_fee))
+                Ok((Some(fee_transfer_info), actual_fee))
+            }
+        }
     }
 }
 
@@ -435,10 +450,12 @@ mod tests {
 
         let class_hash = internal_deploy.class_hash();
         state.set_contract_class(class_hash, &contract).unwrap();
-        internal_deploy.execute(&mut state, &block_context).unwrap();
+        internal_deploy
+            .execute(&mut state, &block_context, false)
+            .unwrap();
         assert_matches!(
             internal_deploy_error
-                .execute(&mut state, &block_context)
+                .execute(&mut state, &block_context, false)
                 .unwrap_err(),
             TransactionError::State(StateError::ContractAddressUnavailable(..))
         )
@@ -476,6 +493,8 @@ mod tests {
 
         let class_hash = internal_deploy.class_hash();
         state.set_contract_class(class_hash, &contract).unwrap();
-        internal_deploy.execute(&mut state, &block_context).unwrap();
+        internal_deploy
+            .execute(&mut state, &block_context, false)
+            .unwrap();
     }
 }
