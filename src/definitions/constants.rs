@@ -20,17 +20,7 @@ pub(crate) const LOG_MSG_TO_L1_ENCODED_DATA_SIZE: usize =
 lazy_static! {
     // TODO: should have an additional (builtin, 0.0) for each builtin (except for keccak)
     pub static ref DEFAULT_CAIRO_RESOURCE_FEE_WEIGHTS: HashMap<String, f64> =
-        HashMap::from([
-            ("n_steps".to_string(), 1.0),
-            ("output_builtin".to_string(), 0.0),
-            ("pedersen_builtin".to_string(), 32.0),
-            ("range_check_builtin".to_string(), 16.0),
-            ("ecdsa_builtin".to_string(), 2048.0),
-            ("bitwise_builtin".to_string(), 64.0),
-            ("ec_op_builtin".to_string(), 1024.0),
-            ("poseidon_builtin".to_string(), 32.0),
-            ("segment_arena_builtin".to_string(), 10.0),
-    ]);
+        HashMap::from([("n_steps".to_string(), 1.0)]);
     pub static ref DEFAULT_SEQUENCER_ADDRESS: Address = Address(felt_str!(
         "3711666a3506c99c9d78c4d4013409a87a962b7a0880a1c24af9fe193dafc01",
         16
