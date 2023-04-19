@@ -112,7 +112,7 @@ impl InternalDeployAccount {
         general_config: &StarknetGeneralConfig,
     ) -> Result<TransactionExecutionInfo, TransactionError>
     where
-        S: Clone + Default + State + StateReader,
+        S: Clone + State + StateReader,
     {
         let tx_info = self.apply(state, general_config)?;
 
@@ -137,7 +137,7 @@ impl InternalDeployAccount {
         general_config: &StarknetGeneralConfig,
     ) -> Result<TransactionExecutionInfo, TransactionError>
     where
-        S: Default + State + StateReader,
+        S: State + StateReader,
     {
         let contract_class = state.get_contract_class(&self.class_hash)?;
 
@@ -181,7 +181,7 @@ impl InternalDeployAccount {
         resources_manager: &mut ExecutionResourcesManager,
     ) -> Result<CallInfo, TransactionError>
     where
-        S: Default + State + StateReader,
+        S: State + StateReader,
     {
         let num_constructors = contract_class
             .entry_points_by_type()
@@ -207,7 +207,7 @@ impl InternalDeployAccount {
         }
     }
 
-    fn handle_nonce<S: Default + State + StateReader + Clone>(
+    fn handle_nonce<S: State + StateReader + Clone>(
         &self,
         state: &mut S,
     ) -> Result<(), TransactionError> {
@@ -235,7 +235,7 @@ impl InternalDeployAccount {
         resources_manager: &mut ExecutionResourcesManager,
     ) -> Result<CallInfo, TransactionError>
     where
-        S: Default + State + StateReader,
+        S: State + StateReader,
     {
         let entry_point = ExecutionEntryPoint::new(
             self.contract_address.clone(),
@@ -278,7 +278,7 @@ impl InternalDeployAccount {
         general_config: &StarknetGeneralConfig,
     ) -> Result<Option<CallInfo>, TransactionError>
     where
-        S: Default + State + StateReader,
+        S: State + StateReader,
     {
         if self.version == 0 {
             return Ok(None);
@@ -320,7 +320,7 @@ impl InternalDeployAccount {
         general_config: &StarknetGeneralConfig,
     ) -> Result<FeeInfo, TransactionError>
     where
-        S: Clone + Default + State + StateReader,
+        S: Clone + State + StateReader,
     {
         if self.max_fee.is_zero() {
             return Ok((None, 0));
