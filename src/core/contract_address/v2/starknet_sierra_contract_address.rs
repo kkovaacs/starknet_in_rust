@@ -15,7 +15,6 @@ use cairo_vm::{
         vm_core::VirtualMachine,
     },
 };
-use std::path::Path;
 
 use crate::{
     core::errors::contract_address_errors::ContractAddressError,
@@ -70,9 +69,11 @@ impl From<SierraStructContractClass> for CairoArg {
     }
 }
 
+const CONTRACT_CLASS_PROGRAM: &str = include_str!("../../../../cairo_programs/contract_class.json");
+
 fn load_program() -> Result<Program, ContractAddressError> {
-    Ok(Program::from_file(
-        Path::new("cairo_programs/contract_class.json"),
+    Ok(Program::from_bytes(
+        CONTRACT_CLASS_PROGRAM.as_bytes(),
         None,
     )?)
 }
